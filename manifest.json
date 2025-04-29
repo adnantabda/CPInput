@@ -1,0 +1,18 @@
+{
+    "manifest_version": 3,
+    "name": "CP Input Code Generator",
+    "description": "Generate Codeforces input code automatically",
+    "version": "1.0",
+    "type" : "module",
+    "permissions": [],
+    "content_scripts": [
+      {
+        "matches": ["https://codeforces.com/problemset/problem/*"],
+        "js": ["content.js"]
+      }
+    ],
+    "action": {
+      "default_title": "CP Input Code Generator"
+    }
+  }
+  
