@@ -1,5 +1,6 @@
 function generateInputCode(problemText, language = "python") {
     const lower = problemText.toLowerCase();
+    console.log(problemText);
 
     if (language === "python") {
         if (lower.includes("only") && lower.includes("integer")) {
@@ -11,15 +12,12 @@ function generateInputCode(problemText, language = "python") {
 }
 
 // Wait for both DOM and all resources to load
-window.addEventListener('load', function() {
-    // Use MutationObserver to handle dynamic content
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
+window.addEventListener('load', function () {
+    const observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function () {
             if (!document.querySelector('.section-title')) return;
-            
-            // Only initialize once
-            if (document.querySelector('#input-code-generator')) return;
-            
+            if (document.querySelector('#input-code-generator-global')) return;
+
             initializeExtension();
             observer.disconnect();
         });
@@ -30,31 +28,28 @@ window.addEventListener('load', function() {
         subtree: true
     });
 
-    // Also try initializing immediately in case content is already loaded
     if (document.querySelector('.section-title')) {
         initializeExtension();
     }
 });
 
 function initializeExtension() {
-    const inputSection = document.querySelector('.section-title');
-    if (!inputSection || inputSection.innerText.trim() !== "Input") return;
+    const secondLevelMenu = document.querySelector('.second-level-menu-list');
+    if (!secondLevelMenu) return;
 
-    // Create a wrapper with unique ID to prevent duplicates
-    const wrapper = document.createElement('div');
-    wrapper.id = "input-code-generator";
-    Object.assign(wrapper.style, {
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        margin: "10px 0",
-        position: "relative"
-    });
+    const wrapper = document.createElement('li');
+    wrapper.id = 'input-code-generator-global';
+    wrapper.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-left: auto;
+        padding: 0 10px;
+    `;
 
-    // Create the generate button
     const button = document.createElement('button');
     Object.assign(button.style, {
-        padding: "8px 16px",
+        padding: "4px 8px",
         backgroundColor: "#4CAF50",
         color: "white",
         border: "none",
@@ -70,14 +65,12 @@ function initializeExtension() {
     });
     button.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg> Generate Input Code`;
 
-    // Hover effect for button
     button.onmouseenter = () => button.style.backgroundColor = "#3e8e41";
     button.onmouseleave = () => button.style.backgroundColor = "#4CAF50";
 
-    // Create the language dropdown
     const dropdown = document.createElement('select');
     Object.assign(dropdown.style, {
-        padding: "8px 12px",
+        padding: "4px 6px",
         paddingRight: "32px",
         borderRadius: "6px",
         border: "1px solid #ddd",
@@ -92,7 +85,6 @@ function initializeExtension() {
         outline: "none"
     });
 
-    // Custom dropdown arrow
     const dropdownArrow = document.createElement('div');
     dropdownArrow.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
     Object.assign(dropdownArrow.style, {
@@ -103,7 +95,6 @@ function initializeExtension() {
         pointerEvents: "none"
     });
 
-    // Dropdown container
     const dropdownContainer = document.createElement('div');
     Object.assign(dropdownContainer.style, {
         position: "relative",
@@ -124,33 +115,25 @@ function initializeExtension() {
         <option value="csharp">C# (Coming Soon)</option>
     `;
 
-    // Append elements to wrapper
     wrapper.appendChild(button);
     wrapper.appendChild(dropdownContainer);
+    secondLevelMenu.appendChild(wrapper);
 
-    // Insert the wrapper after the "Input" title
-    inputSection.parentNode.insertBefore(wrapper, inputSection.nextSibling);
+    button.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dropdownContainer.style.display = "inline-block";
+        dropdown.style.display = "inline-block";
+        button.style.display = "none";
+    });
 
-    // Button click handler
-// Button click handler
-button.addEventListener("click", (e) => {
-    e.stopPropagation(); // Prevent event bubbling
-    dropdownContainer.style.display = "inline-block";
-    dropdown.style.display = "inline-block";
-    button.style.display = "none";
-});
-
-
-    // Document click handler to close dropdown when clicking elsewhere
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         if (!wrapper.contains(e.target)) {
             dropdownContainer.style.display = "none";
             button.style.display = "flex";
         }
     });
 
-    // When language is selected
-    dropdown.addEventListener("change", function(e) {
+    dropdown.addEventListener("change", function (e) {
         e.stopPropagation();
         const container = document.querySelector('.problem-statement');
         const problemText = container?.innerText || "";
@@ -158,14 +141,12 @@ button.addEventListener("click", (e) => {
 
         const generated = generateInputCode(problemText, lang);
         showCodeAlert(lang, generated);
-        
-        // Reset UI
+
         dropdownContainer.style.display = "none";
         button.style.display = "flex";
         dropdown.value = "";
     });
 
-    // Add styles
     addStyles();
 }
 
@@ -181,23 +162,22 @@ function showCodeAlert(lang, code) {
         padding: "16px",
         borderRadius: "8px",
         boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-        zIndex: "10000", // Higher than Codeforces elements
+        zIndex: "10000",
         display: "flex",
         flexDirection: "column",
         gap: "10px",
         maxWidth: "300px",
         animation: "fadeIn 0.3s ease"
     });
-    
+
     alertBox.innerHTML = `
         <div style="font-weight: 600; font-size: 16px;">Generated ${lang} Code</div>
         <div style="background: rgba(0,0,0,0.1); padding: 10px; border-radius: 4px; font-family: monospace; white-space: pre-wrap;">${code}</div>
         <button style="align-self: flex-end; padding: 4px 8px; background: white; color: #4CAF50; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Copy</button>
     `;
-    
+
     document.body.appendChild(alertBox);
-    
-    // Copy button functionality
+
     const copyBtn = alertBox.querySelector('button');
     copyBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -208,19 +188,17 @@ function showCodeAlert(lang, code) {
             setTimeout(() => alertBox.remove(), 300);
         }, 1500);
     });
-    
-    // Auto-close after 5 seconds
+
     setTimeout(() => {
         alertBox.style.animation = "fadeOut 0.3s ease";
         setTimeout(() => alertBox.remove(), 300);
     }, 5000);
 }
-addEventListener
 
 function addStyles() {
     const styleId = "code-generator-styles";
     if (document.getElementById(styleId)) return;
-    
+
     const style = document.createElement('style');
     style.id = styleId;
     style.textContent = `
