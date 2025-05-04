@@ -1,15 +1,4 @@
-function generateInputCode(problemText, language = "python") {
-    const lower = problemText.toLowerCase();
-    console.log(problemText);
-
-    if (language === "python") {
-        if (lower.includes("only") && lower.includes("integer")) {
-            return "w = int(input())";
-        }
-        return "# Couldn't detect input pattern";
-    }
-    return "// Language not supported yet";
-}
+import { parseProblem } from "./parser-engine/parserEngine";
 
 // Wait for both DOM and all resources to load
 window.addEventListener('load', function () {
@@ -135,22 +124,22 @@ function initializeExtension() {
 
     dropdown.addEventListener("change", function (e) {
         e.stopPropagation();
-        const container = document.querySelector('.problem-statement');
-        const problemText = container?.innerText || "";
+      
+        const container = document.querySelector('.input-specification');
         const lang = dropdown.value;
-
-        const generated = generateInputCode(problemText, lang);
-        showCodeAlert(lang, generated);
+        
+        const generated = parseProblem(container, lang);
+        showCodeAlert(generated, lang);
 
         dropdownContainer.style.display = "none";
         button.style.display = "flex";
         dropdown.value = "";
-    });
+      });
 
     addStyles();
 }
 
-function showCodeAlert(lang, code) {
+function showCodeAlert(code , lang) {
     const alertBox = document.createElement('div');
     alertBox.className = "code-generator-alert";
     Object.assign(alertBox.style, {
