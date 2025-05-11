@@ -1,6 +1,8 @@
 import { parseProblem } from "./parser-engine/parserEngine";
+import { highlightCode } from './syntaxHighlighter';
+import './highlight.css';
 
-// Wait for both DOM and all resources to load
+// Wait for DOM and resources to load
 window.addEventListener('load', function () {
     const observer = new MutationObserver(function (mutations) {
         mutations.forEach(function () {
@@ -12,10 +14,7 @@ window.addEventListener('load', function () {
         });
     });
 
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
+    observer.observe(document.body, { childList: true, subtree: true });
 
     if (document.querySelector('.section-title')) {
         initializeExtension();
@@ -23,18 +22,12 @@ window.addEventListener('load', function () {
 });
 
 function initializeExtension() {
-    const secondLevelMenu = document.querySelector('.second-level-menu-list');
+    const secondLevelMenu = document.querySelector('.second-level-menu');
     if (!secondLevelMenu) return;
 
-    const wrapper = document.createElement('li');
+    const wrapper = document.createElement('div');
     wrapper.id = 'input-code-generator-global';
-    wrapper.style.cssText = `
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-left: auto;
-        padding: 0 10px;
-    `;
+    wrapper.style.cssText = `display: flex; align-items: center; gap: 12px; margin-left: auto; padding: 0 10px;`;
 
     const button = document.createElement('button');
     Object.assign(button.style, {
@@ -46,42 +39,81 @@ function initializeExtension() {
         cursor: "pointer",
         fontWeight: "600",
         fontSize: "14px",
-        boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-        transition: "all 0.3s ease",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
         display: "flex",
         alignItems: "center",
-        gap: "6px"
+        gap: "8px",
+        position: "relative",
+        overflow: "hidden"
     });
-    button.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg> Generate Input Code`;
 
-    button.onmouseenter = () => button.style.backgroundColor = "#3e8e41";
-    button.onmouseleave = () => button.style.backgroundColor = "#4CAF50";
+    button.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+        </svg> 
+        Generate Input Code
+        <span style="position: absolute; background: rgba(255,255,255,0.2); border-radius: 50%; transform: scale(0); opacity: 1; pointer-events: none; animation: ripple 0.6s linear;"></span>
+    `;
+
+    button.onmouseenter = () => {
+        button.style.backgroundColor = "#4CAF60";  // Darker green on hover
+        button.style.boxShadow = "0 4px 15px rgba(0,0,0,0.2)";
+    };
+    button.onmouseleave = () => {
+        button.style.backgroundColor = "#4CAF60";  // Original green
+        button.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)";
+    };
+
+    button.addEventListener('click', (e) => {
+        const ripple = button.querySelector('span');
+        ripple.style.transform = 'scale(0)';
+        ripple.style.opacity = '1';
+        
+        const rect = button.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        ripple.style.left = `${x}px`;
+        ripple.style.top = `${y}px`;
+        ripple.style.width = `${rect.width * 2}px`;
+        ripple.style.height = `${rect.width * 2}px`;
+        
+        ripple.style.transform = 'scale(1)';
+        ripple.style.opacity = '0';
+        ripple.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s linear';
+    });
 
     const dropdown = document.createElement('select');
     Object.assign(dropdown.style, {
         padding: "4px 6px",
-        paddingRight: "32px",
         borderRadius: "6px",
-        border: "1px solid #ddd",
+        border: "1px solid #e0e0e0",
         backgroundColor: "#f8f9fa",
         cursor: "pointer",
         fontWeight: "500",
         fontSize: "14px",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
         appearance: "none",
         display: "none",
         transition: "all 0.3s ease",
-        outline: "none"
+        outline: "none",
+        minWidth: "180px"
     });
 
     const dropdownArrow = document.createElement('div');
-    dropdownArrow.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+    dropdownArrow.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+    `;
     Object.assign(dropdownArrow.style, {
         position: "absolute",
-        right: "14px",
+        right: "12px",
         top: "50%",
         transform: "translateY(-50%)",
-        pointerEvents: "none"
+        pointerEvents: "none",
+        transition: "transform 0.2s ease"
     });
 
     const dropdownContainer = document.createElement('div');
@@ -104,6 +136,18 @@ function initializeExtension() {
         <option value="csharp">C# (Coming Soon)</option>
     `;
 
+    dropdown.addEventListener('mouseenter', () => {
+        dropdown.style.backgroundColor = "#ffffff";
+        dropdown.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+        dropdownArrow.style.transform = "translateY(-50%) rotate(180deg)";
+    });
+
+    dropdown.addEventListener('mouseleave', () => {
+        dropdown.style.backgroundColor = "#f8f9fa";
+        dropdown.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
+        dropdownArrow.style.transform = "translateY(-50%)";
+    });
+
     wrapper.appendChild(button);
     wrapper.appendChild(dropdownContainer);
     secondLevelMenu.appendChild(wrapper);
@@ -124,65 +168,207 @@ function initializeExtension() {
 
     dropdown.addEventListener("change", function (e) {
         e.stopPropagation();
-      
         const container = document.querySelector('.input-specification');
         const lang = dropdown.value;
-        
         const generated = parseProblem(container, lang);
         showCodeAlert(generated, lang);
 
         dropdownContainer.style.display = "none";
         button.style.display = "flex";
         dropdown.value = "";
-      });
+    });
 
     addStyles();
 }
 
-function showCodeAlert(code , lang) {
+function showCodeAlert(code, lang) {
+    const codeString = Array.isArray(code) ? code.join('\n') : code;
+
     const alertBox = document.createElement('div');
     alertBox.className = "code-generator-alert";
     Object.assign(alertBox.style, {
         position: "fixed",
         top: "20px",
         right: "20px",
-        backgroundColor: "#4CAF50",
-        color: "white",
-        padding: "16px",
-        borderRadius: "8px",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+        backgroundColor: "#2d3748",  // Darker background for contrast
+        color: "#ecf0f1",
+        padding: "0",
+        borderRadius: "10px",
+        boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
         zIndex: "10000",
         display: "flex",
         flexDirection: "column",
-        gap: "10px",
-        maxWidth: "300px",
-        animation: "fadeIn 0.3s ease"
+        maxWidth: "80vw",
+        maxHeight: "80vh",
+        overflow: "hidden",
+        animation: "fadeIn 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
+        border: "1px solid rgba(255,255,255,0.1)",
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
     });
 
-    alertBox.innerHTML = `
-        <div style="font-weight: 600; font-size: 16px;">Generated ${lang} Code</div>
-        <div style="background: rgba(0,0,0,0.1); padding: 10px; border-radius: 4px; font-family: monospace; white-space: pre-wrap;">${code}</div>
-        <button style="align-self: flex-end; padding: 4px 8px; background: white; color: #4CAF50; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Copy</button>
+    const header = document.createElement('div');
+    Object.assign(header.style, {
+        padding: "12px 16px",
+        backgroundColor: "#4CAF50",  // Changed to a vibrant green
+        color: "white",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        borderBottom: "1px solid rgba(255,255,255,0.1)"
+    });
+
+    const title = document.createElement('div');
+    title.textContent = `Generated ${lang} code  `;
+    Object.assign(title.style, {
+        fontWeight: "600",
+        fontSize: "14px",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px"
+    });
+
+
+    const controls = document.createElement('div');
+    controls.style.display = "flex";
+    controls.style.alignItems = "center";
+    controls.style.gap = "8px";
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-btn';
+    Object.assign(copyBtn.style, {
+        padding: '6px 12px',
+        marginLeft: `6px`,
+        backgroundColor: '#2d3748', 
+        color: 'white',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        fontSize: '12px',
+        fontWeight: '600',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        transition: 'all 0.2s ease'
+    });
+    copyBtn.innerHTML = `
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        Copy
     `;
 
-    document.body.appendChild(alertBox);
+    copyBtn.onmouseenter = () => {
+        copyBtn.style.backgroundColor = '#2c5282';  // Darker blue on hover
+        copyBtn.style.transform = 'translateY(-1px)';
+    };
+    copyBtn.onmouseleave = () => {
+        copyBtn.style.backgroundColor = '#3182ce';  // Original blue
+        copyBtn.style.transform = 'translateY(0)';
+    };
 
-    const copyBtn = alertBox.querySelector('button');
-    copyBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        navigator.clipboard.writeText(code);
-        copyBtn.textContent = 'Copied!';
-        setTimeout(() => {
-            alertBox.style.animation = "fadeOut 0.3s ease";
-            setTimeout(() => alertBox.remove(), 300);
-        }, 1500);
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close-btn';
+    Object.assign(closeBtn.style, {
+        background: "transparent",
+        color: "#bdc3c7",
+        border: "none",
+        fontSize: "20px",
+        cursor: "pointer",
+        width: "28px",
+        height: "28px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: "4px",
+        transition: "all 0.2s ease"
+    });
+    closeBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+    `;
+
+    closeBtn.onmouseenter = () => {
+        closeBtn.style.color = "#ecf0f1";
+        closeBtn.style.backgroundColor = "rgba(255,255,255,0.1)";
+    };
+    closeBtn.onmouseleave = () => {
+        closeBtn.style.color = "#bdc3c7";
+        closeBtn.style.backgroundColor = "transparent";
+    };
+
+    const codeContainer = document.createElement('div');
+    Object.assign(codeContainer.style, {
+        padding: "16px",
+        overflow: "auto",
+        backgroundColor: "#1e2a3a",
+        flex: "1"
     });
 
+    const highlightedCode = highlightCode(codeString, lang);
+    const pre = document.createElement('pre');
+    Object.assign(pre.style, {
+        margin: "0",
+        padding: "0",
+        overflow: "visible"
+    });
+    const codeEl = document.createElement('code');
+    codeEl.className = `hljs language-${lang}`;
+    codeEl.innerHTML = highlightedCode;
+
+    pre.appendChild(codeEl);
+    header.appendChild(title);
+    controls.appendChild(copyBtn);
+    controls.appendChild(closeBtn);
+    header.appendChild(controls);
+    alertBox.appendChild(header);
+    codeContainer.appendChild(pre);
+    alertBox.appendChild(codeContainer);
+    document.body.appendChild(alertBox);
+
+    // Highlighting
     setTimeout(() => {
-        alertBox.style.animation = "fadeOut 0.3s ease";
+        if (window.hljs) window.hljs.highlightElement(codeEl);
+    }, 0);
+
+    copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(codeString);
+        copyBtn.innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Copied!
+        `;
+        copyBtn.style.backgroundColor = '#2ecc71';
+        
+        setTimeout(() => {
+            copyBtn.innerHTML = `
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copy
+            `;
+            copyBtn.style.backgroundColor = '#27ae60';
+        }, 2000);
+    });
+
+    closeBtn.addEventListener('click', () => {
+        alertBox.style.animation = "fadeOut 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)";
         setTimeout(() => alertBox.remove(), 300);
-    }, 5000);
+    });
+
+    // Auto-close after 12 seconds
+    setTimeout(() => {
+        if (document.body.contains(alertBox)) {
+            alertBox.style.animation = "fadeOut 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)";
+            setTimeout(() => alertBox.remove(), 300);
+        }
+    }, 12000);
 }
+
 
 function addStyles() {
     const styleId = "code-generator-styles";
@@ -192,22 +378,40 @@ function addStyles() {
     style.id = styleId;
     style.textContent = `
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
+            from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes fadeOut {
             from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 0; transform: translateY(-20px); }
         }
-        select:hover {
-            border-color: #aaa;
+        @keyframes ripple {
+            to {
+                transform: scale(2);
+                opacity: 0;
+            }
         }
-        select:focus {
-            border-color: #4CAF50;
-            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        .code-generator-alert pre code {
+            border-radius: 6px;
+            padding: 16px !important;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', 'Andale Mono', monospace;
+            font-size: 13px;
+            line-height: 1.5;
         }
-        #input-code-generator button:hover {
-            transform: translateY(-1px);
+        .code-generator-alert::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .code-generator-alert::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        .code-generator-alert::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+        .code-generator-alert::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.3);
         }
     `;
     document.head.appendChild(style);
