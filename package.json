@@ -5,10 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && cp public/manifest.json dist/",
+    "build": "vite build && cp public/manifest.json public/highlight.min.js public/python.min.js public/vs2015.min.css dist/",
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^6.3.1"
+    "vite": "^6.3.1",
+    "vite-plugin-static-copy": "^3.0.0"
+  },
+  "dependencies": {
+    "highlight.js": "^11.11.1",
+    "jsdom": "^26.1.0"
   }
 }
