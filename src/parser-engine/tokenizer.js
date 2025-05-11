@@ -1,28 +1,19 @@
-function processLines(lines) {
-  const processed = [];
+import { cleanDOM } from "./utils.js";
+import { cleanLines } from "./utils.js";
+import parseStatementsToCode from "./inputParser.js";
 
-  for (let line of lines) {
-    // Clean up Unicode characters
-    line = line
-      .replace(/\u00A0/g, ' ') 
-      .replace(/[“”]/g, '"') 
-      .replace(/[‘’]/g, "'")
-      .replace(/–/g, '-')
-      .replace(/—/g, '-')
-      .replace(/\s+/g, ' ')
-      .trim();
+/**
+ * Generate Python input code from natural language input description
+ * @param {string[]} lines - Cleaned lines from the problem statement
+ * @returns {string} Python input boilerplate
+ */
 
-    if (!line) continue;
-
-    processed.push(line);
-  }
-
-  return processed;
-
-}
 
 export function tokenizeProblemStatement(rawInput) {
-  const paragraphs = [...rawInput.querySelectorAll('p')]; // capture bullets too
-  const lines = paragraphs.map(p => p.textContent.trim()).filter(Boolean);
-  return processLines(lines);
+  // cleanDOM(rawInput)
+  const paragraphs = [...rawInput.querySelectorAll('p')]; 
+  const rawLines = paragraphs.map(p => p.textContent.trim()).filter(Boolean);
+  const cleanedLines = cleanLines(rawLines);
+  console.log(cleanedLines)
+  return parseStatementsToCode(cleanedLines)
 }
