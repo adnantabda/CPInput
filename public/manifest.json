@@ -1,18 +1,37 @@
 {
   "manifest_version": 3,
   "name": "CP Input Code Generator",
-  "description": "Generate Codeforces input code automatically",
+  "description": "Parses Codeforces-style input descriptions and generates Python input code automatically for use",
   "version": "1.0",
   "permissions": [],
   "content_scripts": [
     {
       "matches": ["https://codeforces.com/problemset/problem/*"],
-      "js": ["content.js"]
+      "js": ["content.js"],
+      "css": ["assets/highlight.css"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "highlight.min.js",
+        "python.min.js",
+        "vs2015.min.css"
+      ],
+      "matches": ["<all_urls>"]
     }
   ],
   "action": {
     "default_title": "CP Input Code Generator",
     "default_icon": {
+      "16": "icon/icon16.png",
+      "48": "icon/icon48.png",
+      "128": "icon/icon128.png"
     }
+  },
+  "icons": {
+    "16": "icon/icon16.png",
+    "48": "icon/icon48.png",
+    "128": "icon/icon128.png"
   }
 }
