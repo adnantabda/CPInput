@@ -37,10 +37,35 @@ export function cleanLines(lines) {
 }
 
 export function normalizeText(text) {
-    return text.replace(/\s+/g, ' ').trim().toLowerCase();
+  return text.replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+export function extractNumbers(text) {
+  return text.match(/\d+/g)?.map(Number) || [];
+}
+
+
+export function isValidGeneratedCode(code, lang) {
+  if (!code || typeof code !== 'string') return false;
+
+  const trimmed = code.trim();
+  if (trimmed.length < 5) return false; // Too short = probably junk
+
+  const langValidators = {
+    python: c => c.includes('input(') || c.includes('sys.stdin'),
+    cpp: c => c.includes('cin') || c.includes('scanf(') || c.includes('std::cin'),
+    kotlin: c => c.includes('readLine()') || c.includes('Scanner(') || c.includes('System.`in`'),
+    java: c => c.includes('Scanner(') || c.includes('System.in') || c.includes('BufferedReader('),
+    javascript: c => c.includes('prompt(') || c.includes('readline(') || /process\.stdin|console\.read/.test(c),
+    go: c => c.includes('fmt.Scan') || c.includes('bufio.NewReader') || c.includes('os.Stdin'),
+    rust: c => c.includes('std::io::stdin()') || c.includes('io::stdin()') || c.includes('.read_line('),
+    csharp: c => c.includes('Console.ReadLine()') || c.includes('Console.Read(') || c.includes('System.Console.In')
+  };
+
+  if (langValidators[lang]) {
+    return langValidators[lang](trimmed);
   }
-  
-  export function extractNumbers(text) {
-    return text.match(/\d+/g)?.map(Number) || [];
-  }
-  
+
+  // Accept if unknown language but long enough
+  return trimmed.length >= 10;
+}
