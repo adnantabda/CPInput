@@ -219,17 +219,17 @@ function showCodeAlert(code, lang , isRegexMode) {
     console.log(lang)
     let codeString = Array.isArray(code) ? code.join('\n') : code;
 
-const warningRegex = document.createElement('div');
+    const warningRegex = document.createElement('div');
 
-warningRegex.innerHTML = `
-  <div class="warning-container">
-    <div class="warning-icon">⚠️</div>
-    <div class="warning-content">
-      <strong>Regex Mode Notice</strong>
-      <p>Using Regex Mode fallback it may generate incorrect input code. Please check manually or switch to AI Mode for better results.</p>
+    warningRegex.innerHTML = `
+    <div class="warning-container">
+        <div class="warning-icon">⚠️</div>
+        <div class="warning-content">
+        <strong>Regex Mode Notice</strong>
+        <p>Using Regex Mode fallback it may generate incorrect input code. Please check manually or switch to AI Mode for better results.</p>
+        </div>
     </div>
-  </div>
-`;
+    `;
 
 warningRegex.style.cssText = `
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -387,7 +387,9 @@ warningRegex.style.cssText = `
     alertBox.appendChild(header);
     codeContainer.appendChild(pre);
     alertBox.appendChild(codeContainer);
-    alertBox.appendChild(warningRegex)
+    if (isRegexMode){
+        alertBox.appendChild(warningRegex)
+    }
     document.body.appendChild(alertBox);
 
     // Highlighting
