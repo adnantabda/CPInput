@@ -1,8 +1,11 @@
 import { parseProblem } from "./parser-engine/parserEngine";
 import { highlightCode } from './syntaxHighlighter';
 import './highlight.css';
+import { generateWithGoogle } from './parser-engine/generateCode'
+import { tokenizeProblemStatement } from "./parser-engine/tokenizer";
+import { isValidGeneratedCode } from "./parser-engine/utils";
+import parseStatementsToCode from "./parser-engine/inputParser";
 
-// Wait for DOM and resources to load
 window.addEventListener('load', function () {
     const observer = new MutationObserver(function (mutations) {
         mutations.forEach(function () {
@@ -22,6 +25,7 @@ window.addEventListener('load', function () {
 });
 
 function initializeExtension() {
+    let isRegexMode = false
     const secondLevelMenu = document.querySelector('.second-level-menu');
     if (!secondLevelMenu) return;
 
@@ -69,16 +73,16 @@ function initializeExtension() {
         const ripple = button.querySelector('span');
         ripple.style.transform = 'scale(0)';
         ripple.style.opacity = '1';
-        
+
         const rect = button.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        
+
         ripple.style.left = `${x}px`;
         ripple.style.top = `${y}px`;
         ripple.style.width = `${rect.width * 2}px`;
         ripple.style.height = `${rect.width * 2}px`;
-        
+
         ripple.style.transform = 'scale(1)';
         ripple.style.opacity = '0';
         ripple.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s linear';
@@ -127,13 +131,13 @@ function initializeExtension() {
     dropdown.innerHTML = `
         <option value="" disabled selected>Select Language</option>
         <option value="python">Python</option>
-        <option value="cpp">C++ (Coming Soon)</option>
-        <option value="java">Java (Coming Soon)</option>
-        <option value="javascript">JavaScript (Coming Soon)</option>
-        <option value="kotlin">Kotlin (Coming Soon)</option>
-        <option value="go">Go (Coming Soon)</option>
-        <option value="rust">Rust (Coming Soon)</option>
-        <option value="csharp">C# (Coming Soon)</option>
+        <option value="cpp">C++ </option>
+        <option value="kotlin">Kotlin</option>
+        <option value="java">Java</option>
+        <option value="javascript">JavaScript</option>
+        <option value="go">Go</option>
+        <option value="rust">Rust</option>
+        <option value="csharp">C#</option>
     `;
 
     dropdown.addEventListener('mouseenter', () => {
@@ -166,23 +170,80 @@ function initializeExtension() {
         }
     });
 
-    dropdown.addEventListener("change", function (e) {
+
+    dropdown.addEventListener("change", async function (e) {
         e.stopPropagation();
         const container = document.querySelector('.input-specification');
         const lang = dropdown.value;
-        const generated = parseProblem(container, lang);
-        showCodeAlert(generated, lang);
+        let lines = tokenizeProblemStatement(container);
 
-        dropdownContainer.style.display = "none";
-        button.style.display = "flex";
-        dropdown.value = "";
-    });
+        // Create and show loading overlay
+        const loadingOverlay = document.createElement('div');
+        loadingOverlay.className = 'loading-overlay';
+        loadingOverlay.innerHTML = `
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <span>Generating ${lang} code...</span>
+        </div>
+    `;
+        document.body.appendChild(loadingOverlay);
+
+        try {
+            const aiGenerated = await generateWithGoogle(lines.join('\n'), lang);
+            if (isValidGeneratedCode(aiGenerated, lang)) {
+                showCodeAlert(aiGenerated, lang , isRegexMode);
+            } else {
+                // Fallback to regex for Python only
+                isRegexMode = true
+                if (lang === 'python') {
+                    const fallbackCode = parseStatementsToCode(lines);
+                    showCodeAlert(fallbackCode, lang , isRegexMode);
+                } else {
+                    throw new Error("fallback for this language. Not available ");
+                }
+            }
+        } catch (error) {
+            showCodeAlert(`❌ Error generating code: ${error.message}`, lang , isRegexMode);
+        } finally {
+            loadingOverlay.remove();
+            dropdownContainer.style.display = "none";
+            button.style.display = "flex";
+            dropdown.value = "";
+        }
+            });
 
     addStyles();
 }
 
-function showCodeAlert(code, lang) {
-    const codeString = Array.isArray(code) ? code.join('\n') : code;
+function showCodeAlert(code, lang , isRegexMode) {
+    console.log(lang)
+    let codeString = Array.isArray(code) ? code.join('\n') : code;
+
+const warningRegex = document.createElement('div');
+
+warningRegex.innerHTML = `
+  <div class="warning-container">
+    <div class="warning-icon">⚠️</div>
+    <div class="warning-content">
+      <strong>Regex Mode Notice</strong>
+      <p>Using Regex Mode fallback it may generate incorrect input code. Please check manually or switch to AI Mode for better results.</p>
+    </div>
+  </div>
+`;
+
+warningRegex.style.cssText = `
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: #fff8e6;
+  color: #663c00;
+  padding: 12px;
+  border-left: 2px solid #ffc107;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1;
+  margin: 16px 0;
+  max-width: 100%;
+  box-sizing: border-box;
+`;
 
     const alertBox = document.createElement('div');
     alertBox.className = "code-generator-alert";
@@ -238,7 +299,7 @@ function showCodeAlert(code, lang) {
     Object.assign(copyBtn.style, {
         padding: '6px 12px',
         marginLeft: `6px`,
-        backgroundColor: '#2d3748', 
+        backgroundColor: '#2d3748',
         color: 'white',
         border: 'none',
         borderRadius: '4px',
@@ -326,6 +387,7 @@ function showCodeAlert(code, lang) {
     alertBox.appendChild(header);
     codeContainer.appendChild(pre);
     alertBox.appendChild(codeContainer);
+    alertBox.appendChild(warningRegex)
     document.body.appendChild(alertBox);
 
     // Highlighting
@@ -342,7 +404,7 @@ function showCodeAlert(code, lang) {
             Copied!
         `;
         copyBtn.style.backgroundColor = '#2ecc71';
-        
+
         setTimeout(() => {
             copyBtn.innerHTML = `
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -370,6 +432,7 @@ function showCodeAlert(code, lang) {
 }
 
 
+
 function addStyles() {
     const styleId = "code-generator-styles";
     if (document.getElementById(styleId)) return;
@@ -377,41 +440,44 @@ function addStyles() {
     const style = document.createElement('style');
     style.id = styleId;
     style.textContent = `
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* ... existing styles ... */
+        
+        /* Add these new styles */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
         }
-        @keyframes fadeOut {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-20px); }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
-        @keyframes ripple {
-            to {
-                transform: scale(2);
-                opacity: 0;
-            }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
         }
-        .code-generator-alert pre code {
-            border-radius: 6px;
-            padding: 16px !important;
-            font-family: 'Fira Code', 'Consolas', 'Monaco', 'Andale Mono', monospace;
-            font-size: 13px;
-            line-height: 1.5;
-        }
-        .code-generator-alert::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        .code-generator-alert::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.1);
-            border-radius: 10px;
-        }
-        .code-generator-alert::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.2);
-            border-radius: 10px;
-        }
-        .code-generator-alert::-webkit-scrollbar-thumb:hover {
-            background: rgba(255,255,255,0.3);
+        
+        .loading-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
         }
     `;
     document.head.appendChild(style);
