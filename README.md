@@ -8,7 +8,7 @@
 # CPInput - Smart Input Parser for Competitive Programming
 Convert problem statements into clean input parsing code instantly with AI-powered precision or fast regex templates.
 
-[![GitHub Stars](https://img.shields.io/github/stars/adnantahir/smartinputparser?style=for-the-badge&logo=github&color=00B89C)](https://github.com/adnantahir/smartinputparser)
+[![GitHub Stars](https://img.shields.io/github/stars/adnantabda/cpinput?style=for-the-badge&logo=github&color=00B89C)](https://github.com/adnantahir/smartinputparser)
 [![License](https://img.shields.io/badge/license-MIT-00B89C?style=for-the-badge)](LICENSE)
 
 ## 🌟 Features
