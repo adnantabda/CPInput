@@ -1,4 +1,3 @@
-import { cleanDOM } from "./utils.js";
 import { cleanLines } from "./utils.js";
 import parseStatementsToCode from "./inputParser.js";
 
@@ -10,10 +9,9 @@ import parseStatementsToCode from "./inputParser.js";
 
 
 export function tokenizeProblemStatement(rawInput) {
-  // cleanDOM(rawInput)
   const paragraphs = [...rawInput.querySelectorAll('p')]; 
   const rawLines = paragraphs.map(p => p.textContent.trim()).filter(Boolean);
   const cleanedLines = cleanLines(rawLines);
-  console.log(cleanedLines)
-  return parseStatementsToCode(cleanedLines)
+  console.log(cleanedLines);
+  return cleanedLines;
 }
