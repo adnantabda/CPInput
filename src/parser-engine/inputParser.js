@@ -68,14 +68,16 @@ export default function parseStatementsToCode(lines) {
             if (tryMatchAndPush(line, [template[4]])) continue;
         }
 
+        if (line.includes("It is guaranteed")){
+            break
+        }
+
         // --- Groups by type ---
         if (tryMatchAndPush(line,
-            [template[5], template[6], template[7]],
+            [template[5], template[6]],
             (codeLine, match) => {
                 let variableName = match[1] || 'n';
                 const uniqueChars = new Set(variableName)
-
-
 
                 // Handling Duplicate variable name like For Example ttt 
                 if (uniqueChars.size === 1) {
@@ -132,8 +134,22 @@ export default function parseStatementsToCode(lines) {
             continue;
         }
 
-        // --- Remaining templates ---
-        if (tryMatchAndPush(line, template.slice(13, 35))) continue;
+        // --- 2D ( Matrix or Grid  Match templates ---
+        if (tryMatchAndPush(line, template.slice(13, 35),
+                (codeLine, match) => {
+                let variableName = match[1] || 'n';
+                const uniqueChars = new Set(variableName)
+                
+                // Handling Duplicate variable name like For Example ttt 
+                if (uniqueChars.size === 1) {
+                    variableName = variableName[0];
+                } else {
+                    variableName = 'n';
+                }
+                
+                return codeLine.replace('$1', variableName);
+            })) continue;
+            
         if (tryMatchAndPush(line, template.slice(35))) continue;
     }
 
