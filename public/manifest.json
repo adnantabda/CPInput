@@ -6,7 +6,7 @@
   "permissions": [],
   "content_scripts": [
     {
-      "matches": ["https://codeforces.com/problemset/problem/*"],
+      "matches": ["https://codeforces.com/problemset/problem/*" , "https://codeforces.com/contest/*" , "https://codeforces.com/gym/*"],
       "js": ["content.js"],
       "css": ["assets/highlight.css"]
     }
