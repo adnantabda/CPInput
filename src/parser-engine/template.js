@@ -1,5 +1,5 @@
 const template = [
-    // Test cases
+    // Test cases 0 - 4 inclusive 
     {
         "label": "general_test_cases",
         "regex": /\b(?:first\s+line\s+)?(?:contains?|has|is)\s+(?:an?\s+)?(?:integer\s+)?(t(?:est\s+cases?)?|number\s+of\s+(?:test\s+cases?|inputs?|samples?))\b(?:.*?(?:\d+\s*≤\s*t\s*≤\s*\d+|\d+\s*-\s*\d+|\d+\s*to\s*\d+))?/i,
@@ -27,29 +27,29 @@ const template = [
         "code": "t = int(input())  # May need to handle unknown number of cases"
     },
 
-    // Single value inputs
+    // Single value inputs 5 - 8 inclusive
     {
         "label": "single_integer",
-        "regex":/(?:one|the|an|a|single)?\s+(?:[a-z-]+\s+)*integer(?:\s+(?:number|value))?\s+([a-z][a-z0-9_]*)/i,
-        "code": "n = int(input())"
+        "regex": /(?:one|the|an|a|single)?\s+(?:[a-z-]+\s+)*integer(?:\s+(?:number|value))?\s+([a-z][a-z0-9_]*)/i,
+        "code": "$1 = int(input())"
     },
     {
         "label": "single_float",
         "regex": /(?:one|the|an|a|single)?\s+(?:float(?:ing\s+point)?|real)\s+(?:number|value)?\s+([a-z][a-z0-9_]*)/i,
-        "code": "x = float(input())"
+        "code": "$1 = float(input())"
     },
     {
         "label": "single_number",
         "regex": /(?:the|a|an)\s*(?:number|value)\s+([a-z])/i,
-        "code": "n = int(input())"
+        "code": "$1 = int(input())"
     },
     {
         "label": "single_string",
         "regex": /(?:a|an|the|one|single)?\s+string\s+([a-z][a-z0-9_]*)(?:\s+of\s+(?:length|size)\s+([a-z0-9_]+))?/i,
-        "code": "s = input().strip()"
+        "code": "$1 = input().strip()"
     },
 
-    // Multiple values
+    // Multiple values 9 - 12
     {
         "label": "multiple_integers",
         "regex": /\b(?:two|three|four|five|six|seven|eight|nine)(?:\s+[a-z-]+)*\s+(?:integers|numbers|values)\b[:\-,]*(?:\s*([a-z]\w*(?:\s*[,\s]\s*(?:and\s+)?[a-z]\w*)*))?|\b(?:contains?|consists(?:\s+of)?|has)\s+(?:up\s+to\s+)?(?:two|three|four|five|six|seven|eight|nine)?(?:\s+[a-z-]+)*\s*(?:integers|numbers|values)\b[:\-,]*(?:\s*([a-z]\w*(?:\s*[,\s]\s*(?:and\s+)?[a-z]\w*)*))?/i,
@@ -71,7 +71,7 @@ const template = [
         "code": "$2 = input().split()"
     },
 
-    // Arrays/lists
+    // Arrays/lists 13 - 17
     {
         "label": "array_input",
         "regex": /(\w+)\s+(?:integers?|numbers?)\s+([a-z]\w*)/i,
@@ -98,10 +98,10 @@ const template = [
         "code": "arr = list(map(int, input().split()))"
     },
 
-    // Matrix/grid inputs
+    // Matrix/grid inputs 18 - 22
     {
         "label": "matrix_lines",
-        "regex": /next\s+(\w+)\s+lines?\s*(?:each\s*)?(?:contain(?:s|ing))?/i,
+        "regex": /^(?:the\s+)?next\s+([a-zA-Z_]\w*)\s+lines?(?:\s+each(?:\s+(?:of\s+which))?)?\s+(?:contain(?:s|ing)?)(?:\s+(?:exactly\s+)?(?:\d+\s+)?)?(?:elements?|values?|numbers?|integers?|strings?|characters?)?/i,
         "code": "matrix = [input().strip() for _ in range($1)]"
     },
     {
@@ -267,7 +267,7 @@ const template = [
         "code": ""
     },
 
-    // Extendended Additional pattern 
+    // Extendended Additional pattern
     // Test Cases & Mult-input variations
     {
         "label": "test_cases_with_constraints",
@@ -382,7 +382,6 @@ const template = [
         "regex": /grid (\w+) where some cells are (blocked|obstacles)/i,
         "code": "$1 = [list(input().strip()) for _ in range(int(input()))]"
     },
-
     // Graphs & Trees ( Less Common Patterns)
     {
         "label": "weighted_tree",
@@ -405,7 +404,118 @@ const template = [
         "code": "n = int(input())\n$1 = [0]*(n+1)\nfor i in range(1, n+1):\n    $1[i] = int(input())"
     },
 
-    // Interactive & Online Judge Quirks 
+
+    // Meta input Patterns ( Rare But Possible )
+];
+
+
+const matrixTemplates = [
+    // ===== BASIC n×m INTEGER MATRIX =====
+    {
+      label: "basic_nxm_integer_matrix",
+      regex: /^(?:the\s+)?(?:next|following)\s+(\w+)\s+lines?(?:\s+each)?(?:\s+(?:contain(?:s|ing)?|consists?\s+of|has|have)?(?:\s+(?:exactly\s+)?(\w+)\s+(?:space[-\s]?separated\s+)?(?:integers?|numbers?|elements?|values?))?)?.*$/gmi,
+      code: (match) => {
+        const linesVar = match[1];
+        return `matrix = [list(map(int, input().split())) for _ in range(${linesVar})]`;
+      }
+    },
+  
+    // ===== SQUARE n×n MATRIX =====
+    {
+      label: "square_nxn_matrix",
+      regex: /^(?:given\s+an?|you\s+are\s+given\s+an?|read\s+an?)\s+(\w+)\s*×\s*\1\s+(?:matrix|grid)|^(?:the\s+)?next\s+(\w+)\s+lines?(?:\s+each)?\s+contain(?:s|ing)?\s+\2\s+(?:integers?|numbers?).*$/gmi,
+      code: (match) => {
+        const size = match[1] || match[2];
+        return `matrix = [list(map(int, input().split())) for _ in range(${size})]`;
+      }
+    },
+  
+    // ===== CHARACTER/STRING MATRIX =====
+    {
+      label: "character_matrix",
+      regex: /^(?:each\s+of\s+the\s+)?(?:next|following)\s+(\w+)\s+lines?(?:\s+each)?\s+(?:contain(?:s|ing)?|consists?\s+of|has|have)\s+(?:a\s+)?(?:string|row|line)(?:\s+of\s+length\s+(\w+))?.*$/gmi,
+      code: (match) => {
+        const linesVar = match[1];
+        const length = match[2] ? `.strip()[:${match[2]}]` : ".strip()";
+        return `grid = [input()${length} for _ in range(${linesVar})]`;
+      }
+    },
+  
+    // ===== BINARY MATRIX =====
+    {
+      label: "binary_matrix",
+      regex: /^(?:a\s+|the\s+)?(?:binary\s+)?(?:matrix|grid)(?:\s+of\s+size\s+(\w+)\s*×\s*(\w+))?.*?(?:[01#.'"])/gmi,
+      code: (match) => {
+        const rows = match[1] || "N";
+        return `binary_grid = [list(input().strip()) for _ in range(${rows})]`;
+      }
+    },
+  
+    // ===== JAGGED/VARIABLE-LENGTH MATRIX =====
+    {
+      label: "jagged_matrix",
+      regex: /^(?:the\s+)?i-?th\s+(?:of\s+the\s+)?(?:next|following)\s+(\w+)\s+lines?\s+(?:contain(?:s|ing)?|has)\s+(\w+)\s+(?:integers?|elements?).*$/gmi,
+      code: (match) => {
+        const linesVar = match[1];
+        return `jagged = [list(map(int, input().split())) for _ in range(${linesVar})]`;
+      }
+    },
+  
+    // ===== MATRIX WITH METADATA =====
+    {
+      label: "matrix_with_metadata",
+      regex: /^(?:first\s+line\s*:\s*)?(\w+)\s+(\w+)(?:\s+(\w+))?(?:\s*[,;]?\s*|\s+)(?:next\s+(\w+)\s+lines?.*)?$/gmi,
+      code: (match) => {
+        const vars = [match[1], match[2], match[3]].filter(Boolean);
+        const linesVar = match[4] || vars[0];
+        return `${vars.join(', ')} = map(int, input().split())\nmatrix = [list(map(int, input().split())) for _ in range(${linesVar})]`;
+      }
+    },
+  
+    // ===== GRAPH/ADJACENCY MATRIX =====
+    {
+      label: "graph_adjacency_matrix",
+      regex: /^(?:an?\s+)?(?:adjacency\s+)?matrix\s+(?:of\s+size\s+)?(\w+)\s*×\s*(\w+)?(?:\s+for\s+(?:the\s+)?(?:graph|network))?/gmi,
+      code: (match) => {
+        const size = match[1] || "N";
+        return `adj_matrix = [list(map(int, input().split())) for _ in range(${size})]`;
+      }
+    },
+  
+    // ===== SPECIAL MATRIX TYPES =====
+    {
+      label: "special_matrix_types",
+      regex: /^(?:a\s+|the\s+)?(symmetric|triangular|diagonal|toeplitz|sparse|identity)\s+(?:matrix|grid)(?:\s+of\s+size\s+(\w+)\s*×\s*(\w+))?/gmi,
+      code: (match) => {
+        const type = match[1];
+        const size = match[2] || "N";
+        return `${type}_matrix = [list(map(int, input().split())) for _ in range(${size})]`;
+      }
+    },
+  
+    // ===== CUSTOM DELIMITER MATRIX =====
+    {
+      label: "custom_delimiter_matrix",
+      regex: /^(?:matrix|grid)\s+(?:is|values?)\s+(?:separated|delimited)\s+by\s+['"`]?([^'"`\s]+)['"`]?/gmi,
+      code: (match) => {
+        const delimiter = match[1] === 'space' ? ' ' : match[1];
+        return `matrix = [list(map(int, input().split('${delimiter}'))) for _ in range(N)]`;
+      }
+    },
+  
+    // ===== FALLBACK CATCH-ALL MATRIX =====
+    {
+      label: "fallback_matrix",
+      regex: /(?:matrix|grid|2D\s+array)(?:\s+of\s+(?:size\s+)?(\w+)\s*×\s*(\w+))?(?:\s+with\s+.*)?/gmi,
+      code: (match) => {
+        const rows = match[1] || "N";
+        return `matrix = [list(map(int, input().split())) for _ in range(${rows})]`;
+      }
+    }
+  ];
+  
+
+const optional_template = [
     {
         "label": "flush_required",
         "regex": /you must flush (?:output|after each query)/i,
@@ -426,52 +536,6 @@ const template = [
         "regex": /you will receive partial feedback/i,
         "code": "# Handle feedback from judge"
     },
-
-    // Constraints & Guarantees ( More Explicit )
-    {
-        "label": "prime_constraint",
-        "regex": /it is guaranteed that (\w+) is (?:a|prime) number/i,
-        "code": "$1 = int(input())"
-    },
-    {
-        "label": "parity_constraint",
-        "regex": /sum of (\w+) is always (even|odd)/i,
-        "code": "$1 = int(input())"
-    },
-    {
-        "label": "strictly_increasing",
-        "regex": /sequence (\w+) is strictly increasing/i,
-        "code": "$1 = list(map(int, input().split()))"
-    },
-    {
-        "label": "randomized_input",
-        "regex": /input is randomly generated/i,
-        "code": "# Handle random input"
-    },
-
-    // Problem-specific input format
-    {
-        "label": "polynomial_input",
-        "regex": /polynomial (\w+) of degree (\w+)/i,
-        "code": "$1 = list(map(int, input().split()))"
-    },
-    {
-        "label": "permutation_with_constraints",
-        "regex": /permutation (\w+) where (\w+)\[i\] != i/i,
-        "code": "$1 = list(map(int, input().split()))"
-    },
-    {
-        "label": "coordinates_input",
-        "regex": /(\w+) points in (?:2D|3D) space/i,
-        "code": "points = [tuple(map(int, input().split())) for _ in range(int(input()))]"
-    },
-    {
-        "label": "time_series_input",
-        "regex": /time series data (\w+) with (\w+) samples/i,
-        "code": "$1 = [int(input()) for _ in range($2)]"
-    },
-
-    // Meta input Patterns ( Rare But Possible )
     {
         "label": "self_referential_input",
         "regex": /input contains its own description/i,
@@ -492,30 +556,11 @@ const template = [
         "regex": /input may contain (comments|annotation)/i,
         "code": "# Filter out comments from input"
     },
-
-    // Additional cases 
-    // Edge case for empty inputs
     {
-        "label": "optional_input",
-        "regex": /(?:no\s+input\s+provided|empty\s+input|input\s+may\s+be\s+empty)/i,
-        "code": "try:\n    data = input().strip()\nexcept:\n    data = ''"
+        "label": "binary_operations",
+        "regex": /(?:binary\s+)?operation\s+([a-zA-Z]+)\s+between\s+(\w+)\s+and\s+(\w+)/i,
+        "code": "$2 = int(input())\n$3 = int(input())"
     },
-
-    // Range with exclusions
-    {
-        "label": "range_exclusive",
-        "regex": /(\w+)\s+and\s+(\w+)\s+are\s+between\s+(\d+)\s+and\s+(\d+)\s+exclusive/i,
-        "code": "$1, $2 = map(int, input().split())"
-    },
-
-    // Fixed length arrays
-    {
-        "label": "fixed_length_array",
-        "regex": /array\s+of\s+(\d+)\s+integers?/i,
-        "code": "arr = list(map(int, input().split()))"
-    },
-
-    // Optional list
     {
         "label": "optional_list",
         "regex": /optional\s+(?:list|array)\s+of\s+(\w+)\s+(?:integers?|values?)/i,
@@ -535,7 +580,6 @@ const template = [
         "regex": /(\b\w+\b)?\s*pipe-separated\s*integers?\s*([a-z]*)/i,
         "code": "$2 = list(map(int, input().split('|')))"
     },
-
     // Date/Time input
     {
         "label": "datetime_input",
@@ -549,34 +593,7 @@ const template = [
         "regex": /boolean\s+value\s+(true|false)/i,
         "code": "flag = input().strip().lower() == 'true'"
     },
+]
 
-    // Binary operations (e.g., XOR, AND, OR)
-    {
-        "label": "binary_operations",
-        "regex": /(?:binary\s+)?operation\s+([a-zA-Z]+)\s+between\s+(\w+)\s+and\s+(\w+)/i,
-        "code": "$2 = int(input())\n$3 = int(input())"
-    },
-
-    // Nested input structures (e.g., nested lists/arrays)
-    {
-        "label": "nested_input",
-        "regex": /(?:nested|hierarchical)\s+(?:list|array)\s+(.*)/i,
-        "code": "nested = []\nwhile True:\n    try:\n        nested.append(list(map(int, input().split())))\n    except:\n        break"
-    },
-
-    // Multi-line string input
-    {
-        "label": "multiline_string_input",
-        "regex": /multiline\s+string\s+input\s+(.*)/i,
-        "code": "lines = []\nwhile True:\n    try:\n        lines.append(input().strip())\n    except:\n        break"
-    },
-
-    // Distance or range between points
-    {
-        "label": "distance_range",
-        "regex": /distance\s+between\s+(\w+)\s+and\s+(\w+)\s+(?:is\s+between\s+)?(\d+)\s+and\s+(\d+)/i,
-        "code": "$1, $2 = map(int, input().split())"
-    }
-];
 
 export default template
