@@ -13,6 +13,8 @@
     "vite-plugin-static-copy": "^3.0.0"
   },
   "dependencies": {
+    "@google/genai": "^1.1.0",
+    "dotenv": "^16.5.0",
     "highlight.js": "^11.11.1",
     "jsdom": "^26.1.0"
   }
